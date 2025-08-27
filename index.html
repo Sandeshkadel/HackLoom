@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tech Innovators Club | Join Our Community</title>
+
+  <!-- Icons and Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- EmailJS (client-side email) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- intl-tel-input for full country phone with search and validation -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.1/build/css/intlTelInput.css">
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.1/build/js/intlTelInput.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.1/build/js/utils.js"></script>
+
+  <!-- Firebase (for cross-user, persistent updates) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root{
+      --primary:#6366f1;--primary-dark:#4f46e5;--secondary:#10b981;--accent:#f59e0b;
+      --accent-pink:#ec4899;--accent-purple:#a855f7;--dark:#0f172a;--light:#f8fafc;--lighter:#ffffff;--gray:#6b7280;
+      --gradient:linear-gradient(135deg,var(--primary),var(--secondary));
+      --gradient-2:linear-gradient(135deg,var(--accent-purple),var(--accent-pink));
+      --gradient-3:linear-gradient(135deg,var(--accent),var(--accent-pink));
+      --gradient-bg:linear-gradient(135deg,#6366f1,#10b981,#f59e0b,#ec4899);
+      --ring:0 0 0 3px rgba(99,102,241,.20);
+      --shadow-1:0 10px 30px rgba(0,0,0,.06);
+      --shadow-2:0 16px 40px rgba(0,0,0,.10);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--dark);background:var(--light);transition:.3s}
+    body.dark-mode{--dark:#e5e7eb;--light:#0b1020;--lighter:#0f172a;--gray:#cbd5e1}
+
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    section{padding:100px 0}
+    @media (max-width:768px){section{padding:70px 0}}
+
+    /* Preloader */
+    #preloader{position:fixed;inset:0;background:var(--light);z-index:9999;display:grid;place-items:center;transition:.4s}
+    #preloader.hidden{opacity:0;visibility:hidden}
+    .preloader-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+    #preloaderImg{width:78px;height:78px;object-fit:contain;border-radius:14px;box-shadow:0 0 24px rgba(0,229,255,.25)}
+    .spinner{width:32px;height:32px;border:3px solid rgba(0,0,0,.15);border-top-color:#00e5ff;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Header */
+    header{position:fixed;inset:0 0 auto 0;background:rgba(249,250,251,.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,0,0,.06);z-index:1000}
+    body.dark-mode header{background:rgba(11,16,32,.65);border-color:rgba(255,255,255,.08)}
+    nav{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--primary);font-family:Orbitron, Rajdhani, sans-serif;font-weight:800;letter-spacing:.04em}
+    #navbarLogoImg{width:34px;height:34px;border-radius:8px;object-fit:contain}
+    .nav-links{display:flex;gap:18px;align-items:center}
+    .nav-links a{text-decoration:none;color:var(--dark);font-weight:600;position:relative}
+    body.dark-mode .nav-links a{color:var(--dark)}
+    .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:0;background:var(--gradient);transition:.25s;border-radius:3px}
+    .nav-links a:hover::after{width:100%}
+    .theme-toggle{background:var(--gradient);border:none;width:54px;height:28px;border-radius:999px;cursor:pointer;position:relative;padding:0 3px}
+    .theme-toggle::before{content:'\f185';font-family:'Font Awesome 6 Free';font-weight:900;color:#ffd166;position:absolute;left:7px;font-size:12px}
+    .theme-toggle::after{content:'\f186';font-family:'Font Awesome 6 Free';font-weight:900;color:#d1d5db;position:absolute;right:7px;font-size:12px}
+    .toggle-thumb{position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .3s}
+    body.dark-mode .toggle-thumb{transform:translateX(26px)}
+    .mobile-menu-btn{display:none;font-size:1.4rem;background:none;border:none;color:var(--dark);cursor:pointer}
+    @media (max-width:900px){.nav-links{display:none}.mobile-menu-btn{display:block}}
+
+    /* Back to top */
+    #backToTop{position:fixed;right:16px;bottom:16px;display:none;background:var(--gradient-2);color:#fff;border:none;border-radius:50%;width:48px;height:48px;box-shadow:0 8px 24px rgba(168,85,247,.35);cursor:pointer}
+
+    /* Hero */
+    .hero{min-height:100vh;display:flex;align-items:center;padding-top:90px;position:relative;overflow:hidden;background:radial-gradient(60% 60% at 70% 30%, rgba(0,229,255,.08), transparent), radial-gradient(60% 60% at 30% 70%, rgba(255,58,172,.08), transparent), var(--light)}
+    .hero-bg{position:absolute;inset:0;background:var(--gradient-bg);opacity:.09;z-index:-2;background-size:400% 400%;animation:gbg 10s linear infinite}
+    @keyframes gbg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .particle-canvas{position:absolute;inset:0;z-index:-1;opacity:.85;pointer-events:none}
+    .hero-content{display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px}
+    .hero-logo{width:150px;height:150px;background:var(--gradient);border-radius:50%;box-shadow:0 0 24px rgba(0,229,255,.25);overflow:hidden;display:grid;place-items:center;animation:float 3s ease-in-out infinite}
+    .hero-logo img{width:100%;height:100%;object-fit:cover}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+    .hero-title{font-size:clamp(2rem,6vw,4rem);font-weight:800;font-family:Orbitron, Rajdhani, sans-serif;background:var(--gradient-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .btn{padding:12px 22px;border-radius:50px;font-weight:700;text-decoration:none;display:inline-block;position:relative;overflow:hidden}
+    .btn-primary{background:var(--gradient);color:#fff}
+    .btn-secondary{background:transparent;color:var(--primary-dark);border:2px solid var(--primary-dark)}
+    .btn-accent{background:var(--gradient-3);color:#fff}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.ripple::after{content:"";position:absolute;left:50%;top:50%;width:0;height:0;background:rgba(255,255,255,.35);transform:translate(-50%,-50%);border-radius:50%;animation:rip .6s ease-out}
+    @keyframes rip{to{width:200%;height:200%;opacity:0}}
+
+    /* Section titles */
+    .section-title{text-align:center;margin-bottom:50px}
+    .section-title h2{font-family:Orbitron, Rajdhani, sans-serif;font-weight:800;font-size:clamp(1.6rem,3.6vw,2.6rem);background:var(--gradient-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .section-title p{color:var(--gray);max-width:640px;margin:10px auto 0}
+
+    /* About cards */
+    .about-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+    .about-card{background:var(--lighter);border:1px solid rgba(0,0,0,.06);border-radius:18px;padding:22px;box-shadow:var(--shadow-1);text-align:center}
+    .about-card:hover{transform:translateY(-6px)}
+    .stats{display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap}
+    .stat-number{font-size:2.2rem;font-weight:800;background:var(--gradient-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+    /* Meeting (logos + map) */
+    .meeting{background:var(--gradient);color:#fff}
+    .meeting .container{padding-top:100px;padding-bottom:100px}
+    .meeting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:900px;margin:0 auto 16px}
+    .meeting-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:16px}
+    .meeting-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .brand-logo{width:26px;height:26px;object-fit:contain;border-radius:6px;background:#fff;padding:2px}
+    .meeting-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;max-width:1200px;margin:12px auto 0}
+    @media (max-width:960px){.meeting-layout{grid-template-columns:1fr}}
+    .map-container{width:100%;aspect-ratio:16/10;min-height:320px;border-radius:18px;border:2px solid rgba(255,255,255,.65);overflow:hidden;background:#0b132b;box-shadow:0 12px 28px rgba(0,0,0,.25)}
+    @media (max-width:640px){.map-container{aspect-ratio:4/3;min-height:260px}}
+    .map-embed iframe{width:100%;height:100%;border:0;display:block;filter:contrast(1.05) saturate(1.05)}
+    .meeting-media{border-radius:18px;border:1px solid rgba(255,255,255,.25);overflow:hidden;background:rgba(255,255,255,.1);box-shadow:0 12px 28px rgba(0,0,0,.25)}
+    .meeting-media img{width:100%;height:100%;object-fit:cover;display:block}
+    .meeting-form{margin-top:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:16px;max-width:1200px;margin-left:auto;margin-right:auto}
+    .meeting-form .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .meeting-form input{width:100%;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:rgba(0,0,0,.15);color:#fff;outline:none}
+    .meeting-form input:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.2)}
+
+    /* Leaders */
+    .leaders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+    .leader-card{position:relative;background:var(--lighter);border:1px solid rgba(0,0,0,.06);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-1)}
+    .leader-img{height:220px;background:var(--gradient);display:grid;place-items:center}
+    .leader-img img{width:100%;height:100%;object-fit:cover}
+    .leader-info{padding:14px;text-align:center}
+    .leader-overlay{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.7), transparent);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:.25s}
+    .leader-card:hover .leader-overlay{opacity:1}
+    .leader-socials{display:flex;gap:10px;margin-bottom:10px}
+    .leader-socials a{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;display:grid;place-items:center}
+
+    /* Projects */
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+    .project-card{position:relative;background:var(--lighter);border:1px solid rgba(0,0,0,.06);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-1)}
+    .project-media{height:180px;background:var(--gradient);display:grid;place-items:center}
+    .project-media img{width:100%;height:100%;object-fit:cover}
+    .project-info{padding:14px}
+    .project-overlay{position:absolute;inset:0;background:rgba(0,0,0,.65);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;opacity:0;transition:.25s;flex-direction:column;padding:16px;text-align:center}
+    .project-card:hover .project-overlay{opacity:1}
+    .chip{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-size:.82rem}
+
+    /* Shared form styling */
+    .form-surface{background:var(--lighter);border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:var(--shadow-1)}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;margin-bottom:8px;font-weight:600}
+    .input,.textarea,.select{width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;background:var(--light);color:var(--dark);transition:border-color .2s, box-shadow .2s}
+    body.dark-mode .input,body.dark-mode .textarea,body.dark-mode .select{border-color:#334155;background:#0f172a;color:#e5e7eb}
+    .input:focus,.textarea:focus,.select:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
+    .submit-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--gradient);color:#fff;font-weight:800;box-shadow:0 10px 30px rgba(99,102,241,.28);cursor:pointer;transition:.2s}
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(99,102,241,.38)}
+    .input-hint{font-size:.82rem;color:var(--gray);margin-top:6px}
+
+    /* Signup containers */
+    .signup-container{max-width:760px;margin:0 auto}
+    .signup-container .form-surface{padding:22px}
+
+    /* Contact */
+    .contact-container{max-width:760px;margin:0 auto}
+    .contact-container .form-surface{padding:22px}
+
+    /* Login */
+    .login-section{display:none}
+    .login-container{max-width:500px;margin:0 auto}
+    .login-container .form-surface{padding:22px}
+
+    /* Admin */
+    .admin-dashboard{display:none}
+    .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+    .admin-card{background:var(--lighter);border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:16px;box-shadow:var(--shadow-1)}
+    .mini-input{width:100%;padding:10px;border-radius:10px;border:2px solid #e5e7eb;background:var(--light);color:var(--dark);transition:.2s}
+    body.dark-mode .mini-input{border-color:#334155;background:#0f172a;color:#e5e7eb}
+    .mini-input:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
+    .mini-btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.12);background:transparent;color:var(--dark);cursor:pointer;transition:.2s}
+    body.dark-mode .mini-btn{border-color:rgba(255,255,255,.16);color:var(--dark)}
+    .mini-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-1)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+    .table-wrap{width:100%;overflow:auto;max-height:520px;border:1px solid rgba(0,0,0,.06);border-radius:12px;background:var(--lighter);box-shadow:var(--shadow-1)}
+    table{width:100%;border-collapse:collapse;background:transparent}
+    th,td{padding:10px;border-bottom:1px solid rgba(0,0,0,.06);text-align:left;vertical-align:top}
+    thead th{position:sticky;top:0;background:var(--gradient);color:#fff;z-index:1}
+
+    /* Gallery */
+    .gallery-grid{columns:1;column-gap:16px}
+    @media (min-width:640px){.gallery-grid{columns:2}}
+    @media (min-width:992px){.gallery-grid{columns:3}}
+    .gallery-item{break-inside:avoid;border:1px solid rgba(0,0,0,.06);border-radius:14px;overflow:hidden;margin-bottom:16px;cursor:pointer;box-shadow:var(--shadow-1)}
+    .gallery-img{width:100%;height:auto;display:block}
+    .gallery-caption{padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;margin-top:-46px}
+
+    /* Video */
+    .video-section{background:var(--gradient-2);color:#fff;text-align:center}
+    .video-container{max-width:980px;margin:30px auto 0;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.25);background:#000;box-shadow:var(--shadow-2)}
+    .video-placeholder{width:100%;height:500px;display:grid;place-items:center;font-size:4rem;color:#fff}
+
+    /* Footer */
+    footer{background:#0b1020;color:#e5e7eb;padding:60px 0 30px}
+    .footer-content{display:grid;grid-template-columns:2fr 1.2fr 1.2fr;gap:24px;margin-bottom:16px}
+    @media (max-width:820px){.footer-content{grid-template-columns:1fr}}
+    .footer-brand{display:flex;align-items:flex-start;gap:12px}
+    #footerLogoImg{width:42px;height:42px;object-fit:contain;border-radius:8px}
+    .footer-heading{font-weight:800;margin-bottom:10px;font-family:Orbitron, Rajdhani, sans-serif;color:#fff}
+    .footer-links a{display:block;color:#cdd5df;text-decoration:none;margin:.25rem 0;transition:opacity .2s}
+    .footer-links a:hover{opacity:1;color:#fff}
+    .footer-logos{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+    .footer-logos a{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:6px 10px;border-radius:10px;color:#fff;text-decoration:none}
+    .footer-logos img{width:22px;height:22px;object-fit:contain;background:#fff;border-radius:6px;padding:2px}
+    .footer-bottom{opacity:.85;border-top:1px solid rgba(255,255,255,.12);padding-top:14px;text-align:center}
+    .made-by{margin-top:6px;font-size:.92rem;color:#cdd5df}
+    .made-by a{color:#fff;text-decoration:underline}
+  </style>
+</head>
+<body>
+  <!-- Preloader -->
+  <div id="preloader" aria-live="polite" role="status">
+    <div class="preloader-wrap">
+      <img id="preloaderImg" alt="Loading..." src=""/>
+      <div class="spinner" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <nav>
+        <a href="#" class="brand" aria-label="Home">
+          <img id="navbarLogoImg" alt="Club logo" src=""/>
+          <span>Tech Innovators</span>
+        </a>
+        <div class="nav-links" role="navigation" aria-label="Primary">
+          <a href="#about">About</a>
+          <a href="#meeting">Meetings</a>
+          <a href="#leaders">Leaders</a>
+          <a href="#projects">Projects</a>
+          <a href="#signup">Join Us</a>
+          <a href="#contact">Message</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#video">Video</a>
+          <a href="#" id="slackNav" target="_blank" rel="noreferrer">Slack</a>
+          <a href="#" id="zoomNav" target="_blank" rel="noreferrer">Zoom</a>
+          <a href="#login" id="loginLink">Login</a>
+          <a href="#admin" id="adminLink" style="display:none;">Admin</a>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><span class="toggle-thumb"></span></button>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <button id="backToTop" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <!-- Hero -->
+  <section id="hero" class="hero" aria-label="Hero">
+    <div class="hero-bg"></div>
+    <canvas class="particle-canvas" id="particleCanvas" aria-hidden="true"></canvas>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-logo"><img id="heroLogoImg" alt="Club emblem" src=""/></div>
+        <h1 class="hero-title">Tech Innovators Club</h1>
+        <p class="hero-subtitle">Join a community of makers and leaders. Learn, build, and grow together with events, mentorship, and projects.</p>
+        <div class="hero-buttons" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+          <a href="#signup" class="btn btn-primary cta-join">Join Us</a>
+          <a href="#meeting" class="btn btn-accent" id="scheduleZoomBtn">Schedule Zoom Meeting</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="about" aria-label="About">
+    <div class="container">
+      <div class="section-title">
+        <h2>About Our Club</h2>
+        <p id="aboutText">Discover what makes our community special and how you can benefit from being a member.</p>
+      </div>
+      <div class="about-cards">
+        <div class="about-card"><i class="fas fa-users"></i><h3>Community</h3><p>Connect with like-minded individuals.</p></div>
+        <div class="about-card"><i class="fas fa-code"></i><h3>Projects</h3><p>Build real-world projects in teams.</p></div>
+        <div class="about-card"><i class="fas fa-graduation-cap"></i><h3>Learning</h3><p>Workshops, talks, and mentorship.</p></div>
+      </div>
+      <div class="stats" role="list" aria-label="Stats">
+        <div role="listitem"><div class="stat-number" id="memberCount">0</div><div class="stat-label">Members</div></div>
+        <div role="listitem"><div class="stat-number" id="projectCount">0</div><div class="stat-label">Projects</div></div>
+        <div role="listitem"><div class="stat-number" id="eventCount">0</div><div class="stat-label">Events</div></div>
+        <div role="listitem"><div class="stat-number" id="workshopCount">0</div><div class="stat-label">Workshops</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meeting -->
+  <section id="meeting" class="meeting" aria-label="Meetings and scheduling">
+    <div class="container">
+      <div class="section-title" style="color:#fff">
+        <h2>Where We Meet</h2>
+        <p>In-person at our hub and virtually via Zoom.</p>
+      </div>
+
+      <div class="meeting-grid">
+        <div class="meeting-card">
+          <div class="meeting-card-header">
+            <img class="brand-logo" src="https://cdn.worldvectorlogo.com/logos/zoom-communications.svg" alt="Zoom logo">
+            <strong>Zoom Room</strong>
+          </div>
+          <p>Use our persistent Zoom meeting room for virtual sessions.</p>
+          <div><a href="#" id="zoomLinkA" target="_blank" rel="noreferrer" style="color:#fff;text-decoration:underline">Open Zoom</a></div>
+        </div>
+        <div class="meeting-card">
+          <div class="meeting-card-header">
+            <img class="brand-logo" src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" alt="Slack logo">
+            <strong>Slack</strong>
+          </div>
+          <p>Chat with members and get updates in our Slack workspace.</p>
+          <div><a href="#" id="slackLinkA" target="_blank" rel="noreferrer" style="color:#fff;text-decoration:underline">Join Slack</a></div>
+        </div>
+      </div>
+
+      <div class="meeting-layout">
+        <div class="map-container" id="mapContainer">
+          <div class="map-embed" id="mapEmbed" aria-label="Map embed"></div>
+        </div>
+        <div class="meeting-media">
+          <img id="meetingImage" alt="Meeting visual" src=""/>
+        </div>
+      </div>
+
+      <form id="meetingForm" class="meeting-form">
+        <div class="form-row">
+          <div><label for="mName">Name</label><input id="mName" class="input" type="text" placeholder="Your name" required></div>
+          <div><label for="mEmail">Email</label><input id="mEmail" class="input" type="email" placeholder="you@example.com" required></div>
+        </div>
+        <div class="form-row" style="margin-top:8px">
+          <div><label for="mTime">Date & Time</label><input id="mTime" class="input" type="datetime-local" required></div>
+          <div><label for="mNotes">Notes</label><input id="mNotes" class="input" type="text" placeholder="Topic / agenda (optional)"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:10px">
+          <button type="submit" class="btn btn-secondary" style="border-color:#fff;color:#fff">Send Meeting Request</button>
+          <span id="meetingSuccess" style="display:none;align-self:center;font-weight:700">Request sent!</span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Leaders -->
+  <section id="leaders" class="leaders" aria-label="Leaders">
+    <div class="container">
+      <div class="section-title"><h2>Our Leaders</h2><p>Meet the team guiding our community.</p></div>
+      <div class="leaders-grid" id="leadersGrid"></div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects" class="projects" aria-label="Projects">
+    <div class="container">
+      <div class="section-title"><h2>Projects</h2><p>Explore member projects. Hover to see demo and code.</p></div>
+      <div class="projects-grid" id="projectsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Signup -->
+  <section id="signup" class="signup" aria-label="Join our club">
+    <div class="container">
+      <div class="section-title"><h2 id="signupTitle">Join Our Club</h2><p id="signupSubtitle">Become a member today and start your journey with our community.</p></div>
+      <div class="signup-container">
+        <div class="form-surface">
+          <form id="signupForm" novalidate>
+            <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" class="input" placeholder="Full name" required></div>
+            <div class="form-group"><label for="email">Email Address</label><input type="email" id="email" class="input" placeholder="you@example.com" required></div>
+            <div class="form-group">
+              <label for="phoneInput">Phone Number (all countries supported)</label>
+              <input type="tel" id="phoneInput" class="input" placeholder="Enter phone number" required>
+              <div class="input-hint">Use the country dropdown to search and select your country. Number will be validated.</div>
+            </div>
+            <div class="form-group"><label for="address">Address</label><textarea id="address" class="textarea" rows="2" placeholder="Street, City, State/Province, Postal Code, Country"></textarea></div>
+            <div class="form-group">
+              <label for="interest">Area of Interest</label>
+              <select id="interest" class="select" required>
+                <option value="">Select your interest</option>
+                <option value="web-dev">Web Development</option>
+                <option value="ai">Artificial Intelligence</option>
+                <option value="iot">IoT</option>
+                <option value="robotics">Robotics</option>
+                <option value="cybersecurity">Cybersecurity</option>
+              </select>
+            </div>
+            <div class="form-group"><label for="reason">Why do you want to join?</label><textarea id="reason" class="textarea" rows="3" required></textarea></div>
+            <div class="form-group"><label for="attachment">Attachment (optional)</label><input type="file" id="attachment" class="input" accept="image/*,.pdf,.doc,.docx"></div>
+            <button type="submit" class="submit-btn">Join Now</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact / Message (just above footer in final order) -->
+  <section id="contact" class="contact" aria-label="Contact">
+    <div class="container">
+      <div class="section-title"><h2>Send a Message</h2><p>Have a question or idea? Send a message to the admins.</p></div>
+      <div class="contact-container">
+        <div class="form-surface">
+          <form id="messageForm" novalidate>
+            <div class="form-group"><label for="msgName">Your Name</label><input type="text" id="msgName" class="input" placeholder="Your name" required></div>
+            <div class="form-group"><label for="msgEmail">Your Email</label><input type="email" id="msgEmail" class="input" placeholder="you@example.com" required></div>
+            <div class="form-group"><label for="msgSubject">Subject</label><input type="text" id="msgSubject" class="input" placeholder="Subject"></div>
+            <div class="form-group"><label for="msgBody">Message</label><textarea id="msgBody" class="textarea" rows="4" placeholder="Write your message..." required></textarea></div>
+            <button type="submit" class="submit-btn">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Login -->
+  <section id="login" class="login-section" aria-label="Admin login">
+    <div class="container">
+      <div class="section-title"><h2>Admin Login</h2><p>Access the admin dashboard to manage content.</p></div>
+    </div>
+    <div class="login-container">
+      <div class="form-surface">
+        <form id="loginForm">
+          <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" class="input" required></div>
+          <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" class="input" required></div>
+          <button type="submit" class="submit-btn">Login</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin Dashboard -->
+  <section id="admin" class="admin-dashboard" aria-label="Admin dashboard">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <div class="section-title" style="text-align:left;margin:0"><h2>Admin Dashboard</h2><p>Manage branding, links, content, members, meetings, media, projects, messages, and video.</p></div>
+        <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+      </div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>Branding & Images</h3>
+          <input id="brandPreloaderImg" class="mini-input" placeholder="Preloader image URL"/>
+          <input id="brandNavbarLogo" class="mini-input" placeholder="Navbar logo URL"/>
+          <input id="brandHeroLogo" class="mini-input" placeholder="Hero logo URL"/>
+          <input id="brandFooterLogo" class="mini-input" placeholder="Footer logo URL"/>
+          <input id="brandLeaderDefault" class="mini-input" placeholder="Default leader photo URL"/>
+          <input id="brandMeetingImage" class="mini-input" placeholder="Meeting side image URL"/>
+          <div class="toolbar"><button id="saveBrandBtn" class="mini-btn">Save Branding</button></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Links</h3>
+          <input id="cfgSlack" class="mini-input" placeholder="Slack invite link"/>
+          <input id="cfgZoom" class="mini-input" placeholder="Zoom room link"/>
+          <div class="toolbar"><button id="saveCfgBtn" class="mini-btn">Save Links</button></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Location Map</h3>
+          <input id="mapEmbedUrl" class="mini-input" placeholder="Map embed URL (Google Maps/OSM)"/>
+          <div class="toolbar"><button id="saveMapBtn" class="mini-btn">Save Map</button></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>About Content</h3>
+          <textarea id="aboutEditor" class="mini-input" rows="5" placeholder="About text..."></textarea>
+          <div class="toolbar"><button id="saveAboutBtn" class="mini-btn">Save</button></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Reorder Sections</h3>
+          <ul id="sectionsList" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:6px"></ul>
+          <div class="toolbar"><button id="saveOrderBtn" class="mini-btn">Save Order</button></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Leaders</h3>
+          <div id="leadersAdmin" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div class="toolbar" style="gap:6px;flex-wrap:wrap">
+            <input id="leaderName" class="mini-input" placeholder="Name"/>
+            <input id="leaderRole" class="mini-input" placeholder="Role"/>
+            <input id="leaderPhoto" class="mini-input" placeholder="Photo URL"/>
+            <input id="leaderGH" class="mini-input" placeholder="GitHub URL"/>
+            <input id="leaderFB" class="mini-input" placeholder="Facebook URL"/>
+            <input id="leaderLI" class="mini-input" placeholder="LinkedIn URL"/>
+            <input id="leaderIG" class="mini-input" placeholder="Instagram URL"/>
+            <button id="addLeaderBtn" class="mini-btn">Add</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Media (Gallery)</h3>
+          <div id="mediaAdmin" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto"></div>
+          <div class="toolbar" style="gap:6px;flex-wrap:wrap">
+            <select id="mediaType" class="mini-input" style="max-width:140px">
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+            <input id="mediaSrc" class="mini-input" placeholder="Image/Video URL"/>
+            <input id="mediaAlt" class="mini-input" placeholder="Alt text (images)"/>
+            <button id="addMediaBtn" class="mini-btn">Add Media</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Projects</h3>
+          <div id="projectsAdmin" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto"></div>
+          <div class="toolbar" style="gap:6px;flex-wrap:wrap">
+            <input id="projName" class="mini-input" placeholder="Project Name"/>
+            <input id="projDemo" class="mini-input" placeholder="Demo URL"/>
+            <input id="projCode" class="mini-input" placeholder="Code URL"/>
+            <input id="projImg" class="mini-input" placeholder="Image URL"/>
+            <input id="projTags" class="mini-input" placeholder="Tags (comma separated)"/>
+            <button id="addProjectBtn" class="mini-btn">Add Project</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Meetings</h3>
+          <div id="meetingsAdmin" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto"></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Signup & Video</h3>
+          <input id="signupTitleInput" class="mini-input" placeholder="Signup title"/>
+          <input id="signupSubtitleInput" class="mini-input" placeholder="Signup subtitle"/>
+          <input id="videoURLInput" class="mini-input" placeholder="Feature video URL (YouTube/Vimeo/Drive/.mp4)"/>
+          <div class="toolbar"><button id="saveSignupVideoBtn" class="mini-btn">Save</button></div>
+        </div>
+
+        <div class="admin-card" style="grid-column:1/-1">
+          <h3>Messages</h3>
+          <div class="table-wrap">
+            <table aria-label="Messages table">
+              <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Message</th><th>Status</th><th>Reply</th><th>Actions</th></tr></thead>
+              <tbody id="messagesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-card" style="grid-column:1/-1">
+          <h3>Members</h3>
+          <div class="toolbar">
+            <input id="memberSearch" class="mini-input" placeholder="Search members..."/>
+            <button id="exportMembersBtn" class="mini-btn">Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table aria-label="Members table">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Interest</th>
+                  <th>Reason</th><th>Status</th><th>Created</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+ <!-- Dashboard -->
+  <section id="dashboard" class="dashboard" aria-label="Public dashboard">
+    <div class="container">
+      <div class="section-title"><h2>Club Resources</h2><p>Access resources and community links.</p></div>
+      <div class="dashboard-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+        <div class="about-card" style="text-align:center"><i class="fas fa-users-gear"></i><h3>Members</h3><p><span id="membersCountDash">0</span> registered</p><a href="#signup" class="btn btn-primary">Become a Member</a></div>
+        <div class="about-card" style="text-align:center"><i class="fas fa-video"></i><h3>Meetings</h3><p><span id="meetingsCountDash">0</span> requests</p><a href="#meeting" class="btn btn-secondary">Request Zoom</a></div>
+        <div class="about-card" style="text-align:center"><i class="fas fa-slack"></i><h3>Slack</h3><p><span id="slackClicks">0</span> joins via site</p><a href="#" id="slackCTA" target="_blank" class="btn btn-primary">Join Slack</a></div>
+        <div class="about-card" style="text-align:center"><i class="fas fa-code-branch"></i><h3>Hack Club</h3><p>Part of the global Hack Club.</p><a href="https://hackclub.com" target="_blank" class="btn btn-secondary">Visit</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery" class="gallery" aria-label="Gallery">
+    <div class="container">
+      <div class="section-title"><h2>Club Gallery</h2><p>Highlights from events and projects.</p></div>
+      <div class="gallery-grid" id="mediaGrid"></div>
+    </div>
+  </section>
+
+  <!-- Video (always above contact/footer) -->
+  <section id="video" class="video-section" aria-label="Highlights">
+    <div class="container">
+      <div class="section-title"><h2>Club Highlights</h2><p>Watch our latest highlights and demos.</p></div>
+      <div class="video-container" id="videoContainer">
+        <div class="video-placeholder" id="videoPlaceholder"><i class="fas fa-play-circle" aria-hidden="true"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img id="footerLogoImg" alt="Club logo" src=""/>
+          <div>
+            <div class="footer-heading">Tech Innovators Club</div>
+            <p>A community of tech enthusiasts, innovators, and creators. Learning, building, and growing together.</p>
+            <div class="footer-logos">
+              <a id="footerZoomLink" href="#" target="_blank" rel="noreferrer" title="Open Zoom">
+                <img src="https://cdn.worldvectorlogo.com/logos/zoom-communications.svg" alt="Zoom">
+                <span>Zoom</span>
+              </a>
+              <a id="footerSlackLink" href="#" target="_blank" rel="noreferrer" title="Join Slack">
+                <img src="https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png" alt="Slack">
+                <span>Slack</span>
+              </a>
+              <a href="https://hackclub.com" target="_blank" rel="noreferrer" title="Hack Club">
+                <img src="https://assets.hackclub.com/icon-192.png" alt="Hack Club">
+                <span>Hack Club</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-heading">Quick Links</div>
+          <a href="#about">About</a>
+          <a href="#meeting">Meetings</a>
+          <a href="#leaders">Leaders</a>
+          <a href="#projects">Projects</a>
+          <a href="#signup">Join Us</a>
+          <a href="#contact">Message</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#video">Video</a>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-heading">Connect</div>
+          <a href="#" aria-label="Discord"><i class="fab fa-discord"></i> Discord</a>
+          <a href="#" aria-label="X"><i class="fab fa-x-twitter"></i> X (Twitter)</a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i> Instagram</a>
+          <a href="#" aria-label="GitHub"><i class="fab fa-github"></i> GitHub</a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; <span id="currentYear"></span> Tech Innovators Club. All rights reserved.</p>
+        <p class="made-by">Made by <strong>Sandesh Kadel</strong> — <a href="mailto:sandeshkadel2314@gmail.com">sandeshkadel2314@gmail.com</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="backdrop" id="backdrop" aria-modal="true" role="dialog" style="display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);position:fixed;inset:0;z-index:1100"></div>
+
+  <script>
+    // ========= Config & Flags =========
+    const PRELOADER_MS = 1500;
+    const SENDER_EMAIL = 'sandeshkadel2314@gmail.com';
+
+    // EMAIL: set to true and fill keys for real emails
+    const EMAILJS_ENABLED = false;
+    const EMAILJS_CONFIG = {
+      publicKey:'YOUR_PUBLIC_KEY',
+      serviceId:'YOUR_SERVICE_ID',
+      templateIdMeetingRequest:'TEMPLATE_ID_MEETING_REQUEST',
+      templateIdMeetingApproved:'TEMPLATE_ID_MEETING_APPROVED',
+      templateIdMeetingDeclined:'TEMPLATE_ID_MEETING_DECLINED',
+      templateIdMemberRequest:'TEMPLATE_ID_MEMBER_REQUEST',
+      templateIdMemberApproved:'TEMPLATE_ID_MEMBER_APPROVED',
+      templateIdMemberDeclined:'TEMPLATE_ID_MEMBER_DECLINED',
+      templateIdMessageReply:'TEMPLATE_ID_MESSAGE_REPLY'
+    };
+    if (EMAILJS_ENABLED && window.emailjs) emailjs.init(EMAILJS_CONFIG.publicKey);
+
+    // FIREBASE: enable to persist updates for everyone (real-time)
+    const FIREBASE_ENABLED = true; // set to true after filling config below
+    const FIREBASE_CONFIG = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID",
+    };
+    let db = null, docRef = null;
+    if (FIREBASE_ENABLED) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      // Optional offline cache
+      db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+      // Single global store document
+      docRef = db.collection('club').doc('globalStore');
+    }
+
+    // ========= Helpers =========
+    const $ = (q, el=document)=>el.querySelector(q);
+    const byId = (id)=>document.getElementById(id);
+    const fmtDate = (dt)=>{try{return new Date(dt).toLocaleString()}catch{return String(dt)}};
+    const normalizeEmail = (e)=>String(e||'').trim().toLowerCase();
+    const normalizePhone = (e164)=>String(e164||'').replace(/\D+/g,'');
+
+    // ========= Default Store =========
+    const DEF = {
+      config:{slackLink:'https://join.slack.com/t/your-slack/invite',zoomLink:'https://zoom.us/j/your-room'},
+      brand:{preloaderImg:'',navbarLogo:'',heroLogo:'',footerLogo:'',defaultLeaderPhoto:'',meetingImage:''},
+      map:{embedUrl:''},
+      aboutText:'Discover what makes our community special and how you can benefit from being a member.',
+      leaders:[
+        {id:crypto.randomUUID(),name:'Alex Johnson',role:'Club President',photo:'',gh:'',fb:'',li:'',ig:''},
+        {id:crypto.randomUUID(),name:'Maria Rodriguez',role:'Technical Lead',photo:'',gh:'',fb:'',li:'',ig:''},
+        {id:crypto.randomUUID(),name:'David Chen',role:'Events Coordinator',photo:'',gh:'',fb:'',li:'',ig:''},
+        {id:crypto.randomUUID(),name:'Sarah Williams',role:'Community Manager',photo:'',gh:'',fb:'',li:'',ig:''}
+      ],
+      media:[],
+      projects:[],
+      meetings:[],
+      members:[],
+      messages:[],
+      signup:{title:'Join Our Club',subtitle:'Become a member today and start your journey with our community.'},
+      video:{url:''},
+      slackClicks:0,
+      sectionsOrder:['hero','about','meeting','leaders','projects','signup','login','admin','gallery','video','contact','footer'],
+      admin:{email:'admin@club.com',password:'admin123'}
+    };
+
+    function enforceEndOrder(order){
+      const arr = (order||[]).filter(Boolean).filter(x=>!['video','contact','footer'].includes(x));
+      arr.push('video','contact','footer'); return arr;
+    }
+    function withDefaults(d){
+      let data = d && typeof d==='object' ? structuredClone(d) : structuredClone(DEF);
+      data.brand ??= structuredClone(DEF.brand);
+      data.map ??= {embedUrl:''};
+      data.projects ??= [];
+      data.members ??= [];
+      data.meetings ??= [];
+      data.messages ??= [];
+      data.signup ??= structuredClone(DEF.signup);
+      data.video ??= {url:''};
+      data.leaders?.forEach(l=>{l.gh??='';l.fb??='';l.li??='';l.ig??=''});
+      data.members?.forEach(m=>{m.status??='pending'});
+      data.sectionsOrder = enforceEndOrder(data.sectionsOrder||DEF.sectionsOrder);
+      if(typeof data.slackClicks!=='number') data.slackClicks=0;
+      if(!data.admin) data.admin = structuredClone(DEF.admin);
+      return data;
+    }
+
+    // ========= Global STORE + Persistence =========
+    let STORE = null; // current in-memory state (what the UI renders)
+    let writeTimer = null;
+
+    // Save to remote (Firestore) and local cache
+    function saveStore(data){
+      // Update in-memory
+      STORE = withDefaults(data);
+      // Local cache (for instant reload on same device)
+      localStorage.setItem('clubStore', JSON.stringify(STORE));
+      // Remote write (debounced) for everyone to see
+      if (FIREBASE_ENABLED && docRef){
+        clearTimeout(writeTimer);
+        writeTimer = setTimeout(()=>docRef.set(STORE, {merge:false}).catch(console.warn), 200);
+      }
+      return STORE;
+    }
+
+    // One-time bootstrap + live subscription so all viewers update immediately
+    async function initStore(){
+      // Preload from local cache for fast first paint
+      try{
+        const cached = JSON.parse(localStorage.getItem('clubStore')||'null');
+        if (cached){ STORE = withDefaults(cached); renderAll(true); }
+      }catch{}
+      if (FIREBASE_ENABLED && docRef){
+        const snap = await docRef.get();
+        if (snap.exists){
+          STORE = withDefaults(snap.data());
+        } else {
+          STORE = withDefaults(DEF);
+          await docRef.set(STORE, {merge:false});
+        }
+        // Ensure local cache matches remote
+        localStorage.setItem('clubStore', JSON.stringify(STORE));
+        renderAll(true);
+        // Live updates for everyone (admin changes broadcast instantly)
+        docRef.onSnapshot(s=>{
+          if(!s.exists) return;
+          const incoming = withDefaults(s.data());
+          const changed = JSON.stringify(incoming)!==JSON.stringify(STORE);
+          STORE = incoming;
+          localStorage.setItem('clubStore', JSON.stringify(STORE));
+          if (changed) renderAll(false);
+        });
+      } else {
+        // Fallback to local only
+        if (!STORE) STORE = withDefaults(DEF);
+        localStorage.setItem('clubStore', JSON.stringify(STORE));
+        renderAll(true);
+      }
+    }
+
+    // ========= Preloader / Theme / UI basics =========
+    byId('currentYear').textContent = new Date().getFullYear();
+    setTimeout(()=>byId('preloader').classList.add('hidden'), PRELOADER_MS);
+
+    const themeToggle = byId('themeToggle');
+    function applyTheme(mode){document.body.classList.toggle('dark-mode',mode==='dark');localStorage.setItem('darkMode',mode==='dark')}
+    applyTheme(localStorage.getItem('darkMode')==='true'?'dark':'light');
+    themeToggle.addEventListener('click',()=>applyTheme(document.body.classList.contains('dark-mode')?'light':'dark'));
+
+    byId('mobileMenuBtn').addEventListener('click',()=>{
+      const nav=$('.nav-links'); const isOpen=getComputedStyle(nav).display!=='none';
+      nav.style.display = isOpen?'none':'flex';
+    });
+
+    const btt = byId('backToTop');
+    window.addEventListener('scroll',()=>{btt.style.display = window.scrollY>600?'grid':'none'});
+    btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+    byId('loginLink').addEventListener('click',(e)=>{e.preventDefault(); byId('login').style.display='block'; byId('login').scrollIntoView({behavior:'smooth'})});
+
+    document.querySelectorAll('.btn').forEach(b=>b.addEventListener('click',function(){this.classList.remove('ripple');void this.offsetWidth;this.classList.add('ripple')}));
+
+    // Particles (hero)
+    ;(function(){
+      const c=byId('particleCanvas'); if(!c) return; const ctx=c.getContext('2d'); let w,h,pts=[],mouse={x:null,y:null};
+      function resize(){w=c.width=innerWidth; h=c.height=$('#hero').offsetHeight}
+      function create(){const n=Math.min(120,Math.floor(w*h/22000)); pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6,r:Math.random()*2+.6}))}
+      function draw(){ctx.clearRect(0,0,w,h); ctx.fillStyle=document.body.classList.contains('dark-mode')?'rgba(255,255,255,.6)':'rgba(0,0,0,.45)';
+        pts.forEach(p=>{ if(mouse.x!==null){const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.hypot(dx,dy); if(d<100){p.x+=dx/12;p.y+=dy/12}}
+          p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>w)p.vx*=-1; if(p.y<0||p.y>h)p.vy*=-1;
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+        }); requestAnimationFrame(draw)}
+      window.addEventListener('resize',()=>{resize();create()});
+      c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top});
+      c.addEventListener('mouseleave',()=>{mouse.x=mouse.y=null});
+      resize(); create(); draw();
+    })();
+
+    // ========= Binding & Rendering =========
+    function bindConfigLinks(){
+      const slack=STORE.config.slackLink||'#',zoom=STORE.config.zoomLink||'#';
+      ['slackNav','slackLinkA','slackCTA','footerSlackLink'].forEach(id=>{
+        const a=byId(id); if(a){ a.href=slack; a.onclick=()=>{STORE.slackClicks++; saveStore(STORE); renderDashboardCounts()} }
+      });
+      ['zoomNav','zoomLinkA','footerZoomLink'].forEach(id=>{ const a=byId(id); if(a) a.href=zoom; });
+    }
+    function bindBranding(){
+      byId('preloaderImg').src = STORE.brand.preloaderImg || 'https://cdn-icons-png.flaticon.com/512/5968/5968672.png';
+      byId('navbarLogoImg').src= STORE.brand.navbarLogo   || 'https://cdn-icons-png.flaticon.com/512/5968/5968672.png';
+      byId('footerLogoImg').src= STORE.brand.footerLogo   || STORE.brand.navbarLogo || 'https://cdn-icons-png.flaticon.com/512/5968/5968672.png';
+      byId('heroLogoImg').src  = STORE.brand.heroLogo     || STORE.brand.navbarLogo || 'https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=400&auto=format&fit=crop';
+      byId('meetingImage').src = STORE.brand.meetingImage || 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1200&auto=format&fit=crop';
+    }
+    function bindMap(){
+      const url=(STORE.map?.embedUrl||'').trim();
+      const embed=byId('mapEmbed');
+      embed.innerHTML = url
+        ? `<iframe src="${url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`
+        : `<iframe src="https://www.openstreetmap.org/export/embed.html?bbox=85.29,27.67,85.36,27.73&layer=mapnik&marker=27.70,85.33" loading="lazy" allowfullscreen></iframe>`;
+    }
+
+    function renderLeaders(){
+      const grid=byId('leadersGrid'); grid.innerHTML='';
+      (STORE.leaders||[]).forEach(l=>{
+        const photo = l.photo || STORE.brand.defaultLeaderPhoto || '';
+        const card=document.createElement('div'); card.className='leader-card';
+        card.innerHTML = `
+          <div class="leader-img">${photo?`<img src="${photo}" alt="${l.name}">`:`<i class="fas fa-user" style="color:#fff;font-size:2rem"></i>`}</div>
+          <div class="leader-info"><h3>${l.name}</h3><p>${l.role||''}</p></div>
+          <div class="leader-overlay"><div class="leader-socials">
+            ${l.gh?`<a href="${l.gh}" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>`:''}
+            ${l.fb?`<a href="${l.fb}" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>`:''}
+            ${l.li?`<a href="${l.li}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>`:''}
+            ${l.ig?`<a href="${l.ig}" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>`:''}
+          </div></div>`;
+        grid.appendChild(card);
+      });
+    }
+    function renderProjects(){
+      const grid=byId('projectsGrid'); grid.innerHTML='';
+      (STORE.projects||[]).forEach(p=>{
+        const tags=Array.isArray(p.tags)?p.tags:(p.tags?String(p.tags).split(',').map(s=>s.trim()).filter(Boolean):[]);
+        const card=document.createElement('div'); card.className='project-card';
+        card.innerHTML=`
+          <div class="project-media">${p.img?`<img src="${p.img}" alt="${p.name}">`:`<i class="fas fa-cubes" style="color:#fff;font-size:2rem"></i>`}</div>
+          <div class="project-info"><div style="font-weight:800">${p.name}</div>${tags.length?`<div style="margin-top:8px">${tags.map(t=>`<span class="chip">${t}</span>`).join(' ')}</div>`:''}</div>
+          <div class="project-overlay">
+            <div style="font-weight:800">${p.name}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              ${p.demo?`<a class="btn btn-secondary" href="${p.demo}" target="_blank" rel="noreferrer">Demo</a>`:''}
+              ${p.code?`<a class="btn btn-secondary" href="${p.code}" target="_blank" rel="noreferrer">Code</a>`:''}
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+    function openLightbox(html){
+      const b=byId('backdrop'); b.innerHTML = `<div class="lightbox" style="max-width:min(92vw,950px);max-height:84vh;overflow:auto;background:#fff;border-radius:12px;padding:10px">${html}</div>`;
+      b.style.display='flex';
+      b.addEventListener('click',e=>{if(e.target===b){b.style.display='none'}},{once:true});
+    }
+    function renderGallery(){
+      const grid=byId('mediaGrid'); grid.innerHTML='';
+      (STORE.media||[]).forEach(item=>{
+        const wrap=document.createElement('div'); wrap.className='gallery-item';
+        if(item.type==='video'){
+          wrap.innerHTML = `<video class="gallery-img" src="${item.src}" muted loop playsinline></video><div class="gallery-caption">${item.alt||'Video'}</div>`;
+          wrap.addEventListener('mouseenter',()=>wrap.querySelector('video')?.play());
+          wrap.addEventListener('mouseleave',()=>wrap.querySelector('video')?.pause());
+          wrap.addEventListener('click',()=>openLightbox(`<video src="${item.src}" controls autoplay style="max-width:100%;height:auto;border-radius:12px"></video>`));
+        } else {
+          wrap.innerHTML = `<img class="gallery-img" src="${item.src}" alt="${item.alt||''}"><div class="gallery-caption">${item.alt||'Photo'}</div>`;
+          wrap.addEventListener('click',()=>openLightbox(`<img src="${item.src}" alt="${item.alt||''}" style="max-width:100%;height:auto;border-radius:12px">`));
+        }
+        grid.appendChild(wrap);
+      });
+    }
+    function renderDashboardCounts(){
+      const membersLen=(STORE.members||[]).length;
+      const meetingsLen=(STORE.meetings||[]).length;
+      byId('memberCount').textContent=membersLen;
+      byId('projectCount').textContent=(STORE.projects||[]).length;
+      const mcD=document.getElementById('membersCountDash'); if(mcD) mcD.textContent=membersLen;
+      const mtD=document.getElementById('meetingsCountDash'); if(mtD) mtD.textContent=meetingsLen;
+      const sc =document.getElementById('slackClicks'); if(sc) sc.textContent=STORE.slackClicks||0;
+    }
+    function bindSectionsOrderUI(){
+      const list=byId('sectionsList'); if(!list) return;
+      const ids=['hero','about','meeting','leaders','projects','signup','login','admin','gallery','video','contact','footer'];
+      const order=enforceEndOrder(STORE.sectionsOrder?.length?STORE.sectionsOrder:ids);
+      list.innerHTML='';
+      order.forEach(id=>{
+        const li=document.createElement('li');
+        li.textContent=id; li.dataset.id=id;
+        li.draggable = !['video','contact','footer'].includes(id);
+        li.style.cssText='padding:8px;border:1px solid rgba(128,128,128,.3);border-radius:8px;background:transparent;cursor:move';
+        list.appendChild(li);
+      });
+      let dragEl=null;
+      list.addEventListener('dragstart',e=>{dragEl=e.target; e.dataTransfer.effectAllowed='move'});
+      list.addEventListener('dragover',e=>{
+        e.preventDefault();
+        const li=e.target.closest('li'); if(!li || li===dragEl || ['video','contact','footer'].includes(li.dataset.id)) return;
+        const r=li.getBoundingClientRect(); const next=(e.clientY-r.top)/r.height>.5; list.insertBefore(dragEl, next?li.nextSibling:li);
+      });
+      byId('saveOrderBtn').onclick=()=>{
+        const arr=[...list.children].map(li=>li.dataset.id).filter(id=>!['video','contact','footer'].includes(id));
+        arr.push('video','contact','footer'); STORE.sectionsOrder=arr; saveStore(STORE); applySectionsOrder(); alert('Saved section order (Contact just above footer).');
+      }
+    }
+    function applySectionsOrder(){
+      enforceEndOrder(STORE.sectionsOrder).forEach(id=>{
+        const sec=byId(id); if(sec && sec.parentElement) sec.parentElement.appendChild(sec);
+      });
+    }
+
+    // Phone input
+    let iti=null;
+    function initPhoneInput(){
+      const input=byId('phoneInput');
+      if(!input) return;
+      iti = window.intlTelInput(input,{
+        initialCountry:'auto',
+        geoIpLookup: cb=>{
+          try{ fetch('https://ipapi.co/country/').then(r=>r.text()).then(c=>cb((c||'').toLowerCase())).catch(()=>cb('np')) }catch{ cb('np') }
+        },
+        utilsScript:'https://cdn.jsdelivr.net/npm/intl-tel-input@23.6.1/build/js/utils.js',
+        separateDialCode:true,
+        placeholderNumberType:'MOBILE',
+        nationalMode:false,
+        autoPlaceholder:'aggressive'
+      });
+    }
+    function getE164(){ return iti ? iti.getNumber() : ''; }
+    function phoneIsValid(){ return iti ? iti.isValidNumber() : false; }
+
+    // ========= Email helpers (simulated if EMAILJS_DISABLED) =========
+    async function sendEmail(templateId, params, note){
+      if(EMAILJS_ENABLED && window.emailjs){
+        try{await emailjs.send(EMAILJS_CONFIG.serviceId, templateId, params); return true}
+        catch(e){console.warn('EmailJS failed',e); alert('Email service not configured. Set EmailJS keys to enable automatic emails.'); return false}
+      } else { console.log('[EMAIL SIMULATION]', note, params); return false; }
+    }
+    async function sendMeetingRequestEmail(me){
+      return sendEmail(EMAILJS_CONFIG.templateIdMeetingRequest,{
+        to_email:me.email,to_name:me.name,meeting_datetime:fmtDate(me.datetime),from_email:SENDER_EMAIL,
+        subject:'We received your Zoom meeting request',message:`We received your Zoom meeting request for ${fmtDate(me.datetime)}. We will approve you soon.`
+      },'Meeting request ack');
+    }
+    async function sendMeetingApprovedEmail(me,zoomLink){
+      const ok = await sendEmail(EMAILJS_CONFIG.templateIdMeetingApproved,{
+        to_email:me.email,to_name:me.name,meeting_datetime:fmtDate(me.datetime),zoom_link:zoomLink,from_email:SENDER_EMAIL,
+        subject:'Your Zoom meeting is approved',message:`Your Zoom meeting for ${fmtDate(me.datetime)} is approved.\nJoin: ${zoomLink}`
+      },'Meeting approved');
+      if(!ok) window.open(`mailto:${me.email}?subject=${encodeURIComponent('Your Zoom meeting is approved')}&body=${encodeURIComponent(`Your Zoom meeting for ${fmtDate(me.datetime)} is approved.\nJoin: ${zoomLink}\n\n— Tech Innovators\nSent by ${SENDER_EMAIL}`)}`,'_blank');
+    }
+    async function sendMeetingDeclinedEmail(me){
+      const ok = await sendEmail(EMAILJS_CONFIG.templateIdMeetingDeclined,{
+        to_email:me.email,to_name:me.name,meeting_datetime:fmtDate(me.datetime),from_email:SENDER_EMAIL,
+        subject:'About your Zoom meeting request',message:`We are not free at that time. Please select another time.\nRequested: ${fmtDate(me.datetime)}`
+      },'Meeting declined');
+      if(!ok) window.open(`mailto:${me.email}?subject=${encodeURIComponent('About your Zoom meeting request')}&body=${encodeURIComponent(`We are not free at that time. Please select another time.\nRequested: ${fmtDate(me.datetime)}\n\n— Tech Innovators\nSent by ${SENDER_EMAIL}`)}`,'_blank');
+    }
+    async function sendMemberRequestEmail(m){
+      return sendEmail(EMAILJS_CONFIG.templateIdMemberRequest,{
+        to_email:m.email,to_name:m.name,from_email:SENDER_EMAIL,subject:'We received your membership registration',message:`Hi ${m.name}, we received your registration and will approve you soon.`
+      },'Member registration ack');
+    }
+    async function sendMemberApprovedEmail(m,slack){
+      const ok = await sendEmail(EMAILJS_CONFIG.templateIdMemberApproved,{
+        to_email:m.email,to_name:m.name,from_email:SENDER_EMAIL,subject:'Your membership is approved',message:`Hi ${m.name}, your membership has been approved!\n${slack?`Join Slack: ${slack}`:''}`
+      },'Member approved');
+      if(!ok) window.open(`mailto:${m.email}?subject=${encodeURIComponent('Your membership is approved')}&body=${encodeURIComponent(`Hi ${m.name}, your membership has been approved!\n${slack?`Join Slack: ${slack}\n`:''}\n— Tech Innovators\nSent by ${SENDER_EMAIL}`)}`,'_blank');
+    }
+    async function sendMemberDeclinedEmail(m){
+      const ok = await sendEmail(EMAILJS_CONFIG.templateIdMemberDeclined,{
+        to_email:m.email,to_name:m.name,from_email:SENDER_EMAIL,subject:'About your membership application',message:`Hi ${m.name}, we can't approve your application right now. Please try later or contact us.`
+      },'Member declined');
+      if(!ok) window.open(`mailto:${m.email}?subject=${encodeURIComponent('About your membership application')}&body=${encodeURIComponent(`Hi ${m.name}, we can't approve your application right now. Please try later or contact us.\n\n— Tech Innovators\nSent by ${SENDER_EMAIL}`)}`,'_blank');
+    }
+    async function sendMessageReplyEmail(msg, replyText){
+      const ok = await sendEmail(EMAILJS_CONFIG.templateIdMessageReply,{
+        to_email:msg.email,to_name:msg.name,from_email:SENDER_EMAIL,subject:`Re: ${msg.subject||'Your message to Tech Innovators'}`,message:replyText
+      },'Message reply');
+      if(!ok) window.open(`mailto:${msg.email}?subject=${encodeURIComponent(`Re: ${msg.subject||'Your message to Tech Innovators'}`)}&body=${encodeURIComponent(`${replyText}\n\n— Tech Innovators\nSent by ${SENDER_EMAIL}`)}`,'_blank');
+    }
+
+    // ========= Forms & Admin Actions =========
+    // Signup
+    async function fileToDataURL(file){ return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file)}) }
+    byId('signupForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const name=byId('name').value.trim();
+      const email=normalizeEmail(byId('email').value);
+      const address=byId('address').value.trim();
+      const interest=byId('interest').value;
+      const reason=byId('reason').value.trim();
+      if(!name || !email || !interest || !reason){alert('Please fill in all required fields.'); return;}
+      if(!phoneIsValid()){alert('Please enter a valid phone number.'); return;}
+      const e164=getE164();
+      const exists = (STORE.members||[]).some(m=>normalizeEmail(m.email)===email || normalizePhone(m.phone)===normalizePhone(e164));
+      if(exists){alert('You are already in the club (email/phone found).'); return;}
+      let attachment=''; const f=byId('attachment').files?.[0]; if(f){try{attachment=await fileToDataURL(f)}catch{}}
+      const member={id:crypto.randomUUID(),name,email,phone:e164,address,interest,reason,attachment,status:'pending',createdAt:new Date().toISOString()};
+      STORE.members.push(member); saveStore(STORE);
+      renderDashboardCounts(); renderMembersTable();
+      alert(`Thanks, ${name}! We received your application and emailed you.`);
+      await sendMemberRequestEmail(member);
+      e.target.reset(); if(iti) iti.setNumber('');
+    });
+
+    // Meeting request
+    byId('meetingForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const name=byId('mName').value.trim();
+      const email=normalizeEmail(byId('mEmail').value);
+      const datetime=byId('mTime').value;
+      const notes=byId('mNotes').value.trim();
+      if(!name || !email || !datetime){alert('Please provide name, email, and date/time.'); return;}
+      const me={id:crypto.randomUUID(),name,email,datetime,notes,status:'requested',createdAt:new Date().toISOString()};
+      STORE.meetings.push(me); saveStore(STORE);
+      byId('meetingSuccess').style.display='inline'; setTimeout(()=>byId('meetingSuccess').style.display='none',2000);
+      renderDashboardCounts(); renderMeetingsAdmin();
+      await sendMeetingRequestEmail(me);
+      e.target.reset();
+    });
+
+    // Contact message
+    byId('messageForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const name=byId('msgName').value.trim();
+      const email=normalizeEmail(byId('msgEmail').value);
+      const subject=byId('msgSubject').value.trim();
+      const body=byId('msgBody').value.trim();
+      if(!name || !email || !body){alert('Name, email, and message are required.'); return;}
+      const msg={id:crypto.randomUUID(),name,email,subject,message:body,status:'open',createdAt:new Date().toISOString(),replies:[]};
+      STORE.messages.push(msg); saveStore(STORE);
+      renderMessagesTable();
+      alert('Message sent! We will reply to your email soon.');
+      e.target.reset();
+    });
+
+    // Auth (simple demo)
+    function ensureAuthUI(){
+      const logged=localStorage.getItem('isLoggedIn')==='true';
+      byId('adminLink').style.display=logged?'block':'none';
+      byId('admin').style.display=logged?'block':'none';
+      if(logged) loadAdminPanels();
+    }
+    if(location.hash==='#login') byId('login').style.display='block';
+    byId('loginForm').addEventListener('submit',(e)=>{
+      e.preventDefault();
+      const email=normalizeEmail(byId('loginEmail').value), pw=byId('loginPassword').value;
+      if(email===STORE.admin.email && pw===STORE.admin.password){localStorage.setItem('isLoggedIn','true'); ensureAuthUI(); byId('admin').scrollIntoView({behavior:'smooth'})}
+      else alert('Invalid email or password.');
+    });
+    byId('logoutBtn').addEventListener('click',()=>{localStorage.setItem('isLoggedIn','false'); ensureAuthUI(); window.scrollTo({top:0,behavior:'smooth'})});
+
+    // Branding
+    byId('saveBrandBtn').addEventListener('click',()=>{
+      STORE.brand.preloaderImg=byId('brandPreloaderImg').value.trim();
+      STORE.brand.navbarLogo=byId('brandNavbarLogo').value.trim();
+      STORE.brand.heroLogo=byId('brandHeroLogo').value.trim();
+      STORE.brand.footerLogo=byId('brandFooterLogo').value.trim();
+      STORE.brand.defaultLeaderPhoto=byId('brandLeaderDefault').value.trim();
+      STORE.brand.meetingImage=byId('brandMeetingImage').value.trim();
+      saveStore(STORE); bindBranding(); alert('Branding updated for everyone.');
+    });
+
+    // Links
+    byId('saveCfgBtn').addEventListener('click',()=>{
+      STORE.config.slackLink=byId('cfgSlack').value.trim();
+      STORE.config.zoomLink=byId('cfgZoom').value.trim();
+      saveStore(STORE); bindConfigLinks(); alert('Links updated for everyone.');
+    });
+
+    // Map
+    byId('saveMapBtn').addEventListener('click',()=>{
+      STORE.map.embedUrl=byId('mapEmbedUrl').value.trim(); saveStore(STORE); bindMap(); alert('Map updated for everyone.');
+    });
+
+    // About
+    byId('saveAboutBtn').addEventListener('click',()=>{
+      STORE.aboutText=byId('aboutEditor').value; saveStore(STORE); byId('aboutText').textContent=STORE.aboutText; alert('About updated for everyone.');
+    });
+
+    // Leaders admin
+    byId('addLeaderBtn').addEventListener('click',()=>{
+      const name=byId('leaderName').value.trim(); if(!name) return;
+      const role=byId('leaderRole').value.trim(), photo=byId('leaderPhoto').value.trim();
+      const gh=byId('leaderGH').value.trim(), fb=byId('leaderFB').value.trim(), li=byId('leaderLI').value.trim(), ig=byId('leaderIG').value.trim();
+      STORE.leaders.push({id:crypto.randomUUID(),name,role,photo,gh,fb,li,ig}); saveStore(STORE);
+      ['leaderName','leaderRole','leaderPhoto','leaderGH','leaderFB','leaderLI','leaderIG'].forEach(id=>byId(id).value='');
+      renderLeaders(); renderLeadersAdmin();
+    });
+    function renderLeadersAdmin(){
+      const wrap=byId('leadersAdmin'); if(!wrap) return; wrap.innerHTML='';
+      (STORE.leaders||[]).forEach(l=>{
+        const row=document.createElement('div'); row.className='row';
+        row.innerHTML=`
+          <input class="mini-input" data-k="name" value="${l.name}" placeholder="Name" style="flex:1">
+          <input class="mini-input" data-k="role" value="${l.role||''}" placeholder="Role" style="flex:1">
+          <input class="mini-input" data-k="photo" value="${l.photo||''}" placeholder="Photo URL" style="flex:1">
+          <input class="mini-input" data-k="gh" value="${l.gh||''}" placeholder="GitHub URL" style="flex:1">
+          <input class="mini-input" data-k="fb" value="${l.fb||''}" placeholder="Facebook URL" style="flex:1">
+          <input class="mini-input" data-k="li" value="${l.li||''}" placeholder="LinkedIn URL" style="flex:1">
+          <input class="mini-input" data-k="ig" value="${l.ig||''}" placeholder="Instagram URL" style="flex:1">
+          <button class="mini-btn" data-act="save">Save</button>
+          <button class="mini-btn" data-act="del">Delete</button>`;
+        row.querySelector('[data-act="save"]').onclick=()=>{
+          l.name=row.querySelector('[data-k="name"]').value.trim();
+          l.role=row.querySelector('[data-k="role"]').value.trim();
+          l.photo=row.querySelector('[data-k="photo"]').value.trim();
+          l.gh=row.querySelector('[data-k="gh"]').value.trim();
+          l.fb=row.querySelector('[data-k="fb"]').value.trim();
+          l.li=row.querySelector('[data-k="li"]').value.trim();
+          l.ig=row.querySelector('[data-k="ig"]').value.trim();
+          saveStore(STORE); renderLeaders(); renderLeadersAdmin();
+        };
+        row.querySelector('[data-act="del"]').onclick=()=>{STORE.leaders=STORE.leaders.filter(x=>x.id!==l.id); saveStore(STORE); renderLeaders(); renderLeadersAdmin();};
+        wrap.appendChild(row);
+      });
+    }
+
+    // Media admin
+    byId('addMediaBtn').addEventListener('click',()=>{
+      const type=byId('mediaType').value, src=byId('mediaSrc').value.trim(), alt=byId('mediaAlt').value.trim();
+      if(!src) return alert('Provide a media URL.');
+      STORE.media.push({id:crypto.randomUUID(),type,src,alt}); saveStore(STORE); renderGallery(); renderMediaAdmin(); byId('mediaSrc').value=''; byId('mediaAlt').value='';
+    });
+    function renderMediaAdmin(){
+      const wrap=byId('mediaAdmin'); if(!wrap) return; wrap.innerHTML='';
+      (STORE.media||[]).forEach(m=>{
+        const row=document.createElement('div'); row.className='row';
+        row.innerHTML=`<span style="min-width:60px">${m.type}</span>
+          <input class="mini-input" value="${m.alt||''}" placeholder="Alt (images)" data-k="alt" style="flex:1">
+          <button class="mini-btn" data-act="del">Delete</button>`;
+        row.querySelector('[data-k="alt"]').onchange=(e)=>{m.alt=e.target.value; saveStore(STORE); renderGallery();};
+        row.querySelector('[data-act="del"]').onclick=()=>{STORE.media=STORE.media.filter(x=>x.id!==m.id); saveStore(STORE); renderGallery(); renderMediaAdmin();};
+        wrap.appendChild(row);
+      });
+    }
+
+    // Projects admin
+    byId('addProjectBtn').addEventListener('click',()=>{
+      const name=byId('projName').value.trim(); if(!name) return alert('Project name required.');
+      const img=byId('projImg').value.trim(), demo=byId('projDemo').value.trim(), code=byId('projCode').value.trim();
+      const tags=byId('projTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+      STORE.projects.push({id:crypto.randomUUID(),name,img,demo,code,tags}); saveStore(STORE); renderProjects(); renderProjectsAdmin(); renderDashboardCounts();
+      ['projName','projImg','projDemo','projCode','projTags'].forEach(id=>byId(id).value='');
+    });
+    function renderProjectsAdmin(){
+      const wrap=byId('projectsAdmin'); if(!wrap) return; wrap.innerHTML='';
+      (STORE.projects||[]).forEach(p=>{
+        const row=document.createElement('div'); row.className='row';
+        row.innerHTML=`
+          <input class="mini-input" data-k="name" value="${p.name}" placeholder="Name" style="flex:1">
+          <input class="mini-input" data-k="img" value="${p.img||''}" placeholder="Image URL" style="flex:1">
+          <input class="mini-input" data-k="demo" value="${p.demo||''}" placeholder="Demo URL" style="flex:1">
+          <input class="mini-input" data-k="code" value="${p.code||''}" placeholder="Code URL" style="flex:1">
+          <input class="mini-input" data-k="tags" value="${(p.tags||[]).join(', ')}" placeholder="tags" style="flex:1">
+          <button class="mini-btn" data-act="save">Save</button>
+          <button class="mini-btn" data-act="del">Delete</button>`;
+        row.querySelector('[data-act="save"]').onclick=()=>{
+          p.name=row.querySelector('[data-k="name"]').value.trim();
+          p.img=row.querySelector('[data-k="img"]').value.trim();
+          p.demo=row.querySelector('[data-k="demo"]').value.trim();
+          p.code=row.querySelector('[data-k="code"]').value.trim();
+          p.tags=row.querySelector('[data-k="tags"]').value.split(',').map(s=>s.trim()).filter(Boolean);
+          saveStore(STORE); renderProjects(); renderProjectsAdmin();
+        };
+        row.querySelector('[data-act="del"]').onclick=()=>{STORE.projects=STORE.projects.filter(x=>x.id!==p.id); saveStore(STORE); renderProjects(); renderProjectsAdmin(); renderDashboardCounts();};
+        wrap.appendChild(row);
+      });
+    }
+
+    // Meetings admin
+    function renderMeetingsAdmin(){
+      const wrap=byId('meetingsAdmin'); if(!wrap) return; wrap.innerHTML='';
+      (STORE.meetings||[]).slice().reverse().forEach(me=>{
+        const row=document.createElement('div'); row.className='row';
+        row.innerHTML=`
+          <div style="flex:1;min-width:240px"><strong>${me.name}</strong> — ${me.email}<br><small>${fmtDate(me.datetime)}</small><br>${me.notes?`<small>${me.notes}</small><br>`:''}<small>Status: <b>${me.status}</b></small></div>
+          <div class="row" style="align-items:center">
+            <input class="mini-input" data-k="zoom" placeholder="Zoom link to send" value="${STORE.config.zoomLink||''}" style="min-width:220px">
+            <button class="mini-btn" data-act="approve">Approve + Send</button>
+            <button class="mini-btn" data-act="cancel">Decline + Notify</button>
+            <button class="mini-btn" data-act="del">Delete</button>
+          </div>`;
+        row.querySelector('[data-act="approve"]').onclick=async ()=>{
+          const link=row.querySelector('[data-k="zoom"]').value.trim()||STORE.config.zoomLink||'#';
+          me.status='approved'; me.zoomLink=link; saveStore(STORE); renderMeetingsAdmin(); renderDashboardCounts(); await sendMeetingApprovedEmail(me, link);
+        };
+        row.querySelector('[data-act="cancel"]').onclick=async ()=>{
+          me.status='declined'; saveStore(STORE); renderMeetingsAdmin(); renderDashboardCounts(); await sendMeetingDeclinedEmail(me);
+        };
+        row.querySelector('[data-act="del"]').onclick=()=>{STORE.meetings=STORE.meetings.filter(x=>x.id!==me.id); saveStore(STORE); renderMeetingsAdmin(); renderDashboardCounts();};
+        wrap.appendChild(row);
+      });
+    }
+
+    // Messages table
+    function renderMessagesTable(){
+      const tbody=byId('messagesTableBody'); if(!tbody) return; tbody.innerHTML='';
+      (STORE.messages||[]).slice().reverse().forEach(msg=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${msg.name}</td>
+          <td>${msg.email}</td>
+          <td>${msg.subject||'—'}</td>
+          <td>${msg.message}</td>
+          <td>${msg.status}</td>
+          <td><textarea data-k="reply" rows="2" placeholder="Type reply..." class="mini-input" style="min-width:220px"></textarea></td>
+          <td>
+            <div class="row">
+              <button class="mini-btn" data-act="send">Reply</button>
+              <button class="mini-btn" data-act="del">Delete</button>
+            </div>
+          </td>`;
+        tr.querySelector('[data-act="send"]').onclick=async ()=>{
+          const text=tr.querySelector('[data-k="reply"]').value.trim();
+          if(!text) return alert('Reply text required.');
+          msg.replies.push({text,at:new Date().toISOString()}); msg.status='replied'; saveStore(STORE); renderMessagesTable(); await sendMessageReplyEmail(msg, text);
+        };
+        tr.querySelector('[data-act="del"]').onclick=()=>{STORE.messages=STORE.messages.filter(x=>x.id!==msg.id); saveStore(STORE); renderMessagesTable();};
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Members table
+    function renderMembersTable(){
+      const tbody=byId('userTableBody'); if(!tbody) return; tbody.innerHTML='';
+      const q=(byId('memberSearch')?.value||'').trim().toLowerCase();
+      (STORE.members||[]).slice().reverse().filter(m=>{
+        const s=[m.name,m.email,m.phone,m.address,m.interest,m.reason,m.status].join(' ').toLowerCase();
+        return !q || s.includes(q);
+      }).forEach(m=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${m.name}</td>
+          <td>${m.email}</td>
+          <td>${m.phone||'—'}</td>
+          <td>${m.address?m.address.replace(/\n/g,'<br>'):'—'}</td>
+          <td>${m.interest}</td>
+          <td>${m.reason}</td>
+          <td><b>${m.status||'pending'}</b></td>
+          <td><small>${fmtDate(m.createdAt)}</small></td>
+          <td>
+            <div class="row">
+              <button class="mini-btn" data-act="approve">Approve</button>
+              <button class="mini-btn" data-act="decline">Decline</button>
+              <button class="mini-btn" data-act="del">Delete</button>
+            </div>
+          </td>`;
+        tr.querySelector('[data-act="approve"]').onclick=async ()=>{m.status='approved'; saveStore(STORE); renderMembersTable(); await sendMemberApprovedEmail(m, STORE.config.slackLink||'');};
+        tr.querySelector('[data-act="decline"]').onclick=async ()=>{m.status='declined'; saveStore(STORE); renderMembersTable(); await sendMemberDeclinedEmail(m);};
+        tr.querySelector('[data-act="del"]').onclick=()=>{STORE.members=STORE.members.filter(x=>x.id!==m.id); saveStore(STORE); renderMembersTable(); renderDashboardCounts();};
+        tbody.appendChild(tr);
+      });
+    }
+    byId('memberSearch') && byId('memberSearch').addEventListener('input',renderMembersTable);
+    byId('exportMembersBtn') && byId('exportMembersBtn').addEventListener('click',()=>{
+      const rows=[['Name','Email','Phone','Address','Interest','Reason','Status','Created']];
+      (STORE.members||[]).forEach(m=>rows.push([m.name,m.email,m.phone,m.address?.replace(/\n/g,' '),m.interest,m.reason?.replace(/\n/g,' '),m.status,fmtDate(m.createdAt)]));
+      const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='members.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    // Video embed builder
+    function buildVideoEmbedHTML(url){
+      if(!url) return `<div class="video-placeholder"><i class="fas fa-play-circle"></i></div>`;
+      const u=url.trim();
+      const isDirect=/\.(mp4|webm|ogg)(\?.*)?$/i.test(u);
+      if(isDirect) return `<video src="${u}" controls playsinline style="width:100%;height:auto"></video>`;
+      let m=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+      if(m) return `<iframe width="100%" height="500" src="https://www.youtube.com/embed/${m[1]}" title="YouTube video" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+      m=u.match(/vimeo\.com\/(\d+)/); if(m) return `<iframe src="https://player.vimeo.com/video/${m[1]}" width="100%" height="500" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      m=u.match(/dailymotion\.com\/video\/([A-Za-z0-9]+)/); if(m) return `<iframe frameborder="0" width="100%" height="500" src="https://www.dailymotion.com/embed/video/${m[1]}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/); if(m) return `<iframe src="https://drive.google.com/file/d/${m[1]}/preview" width="100%" height="500" allow="autoplay"></iframe>`;
+      return `<iframe width="100%" height="500" src="${u}" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    }
+    function applySignupVideo(){
+      const c=byId('videoContainer'); const url=(STORE.video.url||'').trim();
+      c.innerHTML = buildVideoEmbedHTML(url);
+    }
+
+    // Admin panels load values
+    function loadAdminPanels(){
+      byId('brandPreloaderImg').value=STORE.brand.preloaderImg||'';
+      byId('brandNavbarLogo').value=STORE.brand.navbarLogo||'';
+      byId('brandHeroLogo').value=STORE.brand.heroLogo||'';
+      byId('brandFooterLogo').value=STORE.brand.footerLogo||'';
+      byId('brandLeaderDefault').value=STORE.brand.defaultLeaderPhoto||'';
+      byId('brandMeetingImage').value=STORE.brand.meetingImage||'';
+      byId('cfgSlack').value=STORE.config.slackLink||'';
+      byId('cfgZoom').value=STORE.config.zoomLink||'';
+      byId('mapEmbedUrl').value=STORE.map?.embedUrl||'';
+      byId('aboutEditor').value=STORE.aboutText||'';
+      byId('signupTitleInput').value=STORE.signup.title||'';
+      byId('signupSubtitleInput').value=STORE.signup.subtitle||'';
+      byId('videoURLInput').value=STORE.video.url||'';
+      bindSectionsOrderUI();
+      renderLeadersAdmin();
+      renderMediaAdmin();
+      renderProjectsAdmin();
+      renderMeetingsAdmin();
+      renderMembersTable();
+      renderMessagesTable();
+    }
+
+    // ========= Render All =========
+    function renderAll(firstPaint){
+      // Branding & links
+      bindBranding(); bindConfigLinks(); bindMap();
+      // Content
+      byId('aboutText').textContent=STORE.aboutText||byId('aboutText').textContent;
+      byId('signupTitle').textContent=STORE.signup.title||'Join Our Club';
+      byId('signupSubtitle').textContent=STORE.signup.subtitle||'Become a member today and start your journey with our community.';
+      applySignupVideo();
+      // Lists
+      renderLeaders(); renderProjects(); renderGallery(); renderDashboardCounts(); applySectionsOrder(); ensureAuthUI();
+      if(firstPaint){
+        // Counters animation on first paint
+        function animateCounter(id,val,dur){let t0=null;const el=byId(id); function step(ts){if(!t0)t0=ts;const p=Math.min((ts-t0)/dur,1);el.textContent=Math.floor(p*val); if(p<1)requestAnimationFrame(step)} requestAnimationFrame(step)}
+        animateCounter('memberCount',(STORE.members||[]).length,900);
+        animateCounter('projectCount',(STORE.projects||[]).length,900);
+        animateCounter('eventCount',50,900);
+        animateCounter('workshopCount',30,900);
+      }
+    }
+
+    // ========= Animations =========
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from('.hero-logo',{duration:1.2,y:-50,opacity:0,ease:'power3.out'});
+    gsap.from('.hero-title',{duration:1,y:30,opacity:0,delay:.2});
+    gsap.utils.toArray('section').forEach(sec=>{
+      gsap.from(sec,{scrollTrigger:{trigger:sec,start:'top 80%'},y:40,opacity:0,duration:.8});
+    });
+
+    // CTA focus
+    byId('scheduleZoomBtn')?.addEventListener('click',()=>{byId('mName')?.focus()});
+
+    // ========= Start =========
+    initPhoneInput();
+    initStore();
+  </script>
+</body>
+</html>
